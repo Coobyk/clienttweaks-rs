@@ -1,0 +1,62 @@
+id = "clienttweaks"
+name = "Client Tweaks"
+version = "0.1.0"
+description = "Quality-of-life client tweaks ported from ClientTweaks (Fabric): auto-climb ladders, reactive sprint, hidden hands/shields, torch and offhand-use safety, log stripping control and durability guards."
+authors = ["coobyk"]
+api = "0.2"
+side = "client"
+capabilities = ["registries"]
+
+[native]
+game = "26.3"
+horizon = "f00125f61f794aaa3d4e950d301f353b35b6ee3d"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# Game-side logic lives in one injected module; the mixins only forward to it.
+[[native.module]]
+id = "logic"
+file = "crates/horizon-client/src/game.rs"
+name = "umbx_clienttweaks"
+source = "src/logic.rs"
+
+# Movement input: auto-climb feeds a forward press, reactive sprint clears the
+# sprint flag. The call struct travels by value, so this overwrites the wrapper
+# and fires the listeners itself, as baritone's input mixin does.
+[[native.mixin]]
+id = "input"
+target = "horizon_client::game::native_hooks::movement_input::Game::native_movement_input"
+kind = "OVERWRITE"
+helper = "src/mixins/input.rs"
+bindings = [
+  { name = "game", ty = "&Game<'_>", value = "&*self" },
+  { name = "call", ty = "mod_api::__private::MovementInputCall<'_>", value = "call" },
+]
+
+# First-person hands: hide the offhand item, an idle shield or the empty
+# main-hand arm by cancelling the default geometry.
+[[native.mixin]]
+id = "hand"
+target = "horizon_client::game::native_hooks::render_hand::Game::native_render_hand"
+kind = "HEAD"
+helper = "src/mixins/hand.rs"
+bindings = [
+  { name = "game", ty = "&Game<'_>", value = "&*self" },
+  { name = "render", ty = "&mut HandRender<'_>", value = "&mut *render" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+# Interaction keys: torch and offhand-use rules, log stripping control,
+# amethyst protection and the mending durability guard veto actions here.
+[[native.mixin]]
+id = "interact"
+target = "horizon_client::game::native_hooks::interaction::Game::native_interaction_key_mapping_triggered"
+kind = "HEAD"
+helper = "src/mixins/interact.rs"
+bindings = [
+  { name = "game", ty = "&mut Game<'_>", value = "&mut *self" },
+  { name = "key", ty = "InteractionKey", value = "key" },
+  { name = "hand", ty = "Hand", value = "hand" },
+  { name = "attempt", ty = "InteractionAttempt", value = "attempt" },
+  { name = "swing_hand", ty = "&mut bool", value = "&mut *swing_hand" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
