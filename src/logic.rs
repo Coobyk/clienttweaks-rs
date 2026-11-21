@@ -88,12 +88,13 @@ pub fn render_hand(
             }
         }
         mod_api::Hand::Off => {
-            *canceled = offhand_hidden(game, render.stack.is_some());
+            *canceled = offhand_hidden(game, render);
         }
     }
 }
 
-fn offhand_hidden(game: &Game<'_>, holding: bool) -> bool {
+fn offhand_hidden(game: &Game<'_>, render: &mod_api::HandRender<'_>) -> bool {
+    let holding = render.stack.is_some();
     let shield = game
         .offhand
         .as_ref()
@@ -222,7 +223,6 @@ pub fn interaction(
     game: &mut Game<'_>,
     key: mod_api::InteractionKey,
     hand: mod_api::Hand,
-    _attempt: mod_api::InteractionAttempt,
     swing_hand: &mut bool,
     canceled: &mut bool,
 ) {

@@ -56,7 +56,6 @@ bindings = [
   { name = "game", ty = "&mut Game<'_>", value = "&mut *self" },
   { name = "key", ty = "InteractionKey", value = "key" },
   { name = "hand", ty = "Hand", value = "hand" },
-  { name = "attempt", ty = "InteractionAttempt", value = "attempt" },
   { name = "swing_hand", ty = "&mut bool", value = "&mut *swing_hand" },
   { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
 ]
